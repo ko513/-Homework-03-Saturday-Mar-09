@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en-us">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Classic Rock Word Guess</title>
+
+	<!-- Bootstrap CDN and local styles -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/style.css">
+</head>
+
+
+  <body>
+  	<div class="container">
+  
+  		<div class="row" id="page-header">
+  			<div class="col-md-12">
+  				<div class="page-header">
+  					<h1>Classic Rock Word Guess</h1>
+  					<hr>
+  					<p>Enter letters from the keyboard to guess the name of a classic rock band or artist!</p>
+  				</div>
+  			</div>
+  		</div>
+  
+  		<div class="row">
+  			<div class="col-md-12" id="displayWord"></div>
+  		</div>
+  
+  		<div class="row" id="guess-headers">
+  			<div class="col-md-3">Correct Guesses</div>
+  			<div class="col-md-3">Incorrect Guesses</div>
+  			<div class="col-md-3">Guesses Remaining</div>
+  		</div>
+  
+  		<div class="row" id="guesses">
+  			<div class="col-md-3" id="correctGuesses"></div>
+  			<div class="col-md-3" id="incorrectGuesses"></div>
+  			<div class="col-md-3" id="guessesRemaining"></div>
+  
+        <div class="col-md-3">
+          <div id="album-cover"></div>
+          <div id="audioContainer"></div>
+        </div>
+  		</div>
+  
+  		<div class="row">
+  			<div class="col-md-2">
+  				<button id="newGame" onclick="newGame()">New Game</button>
+  			</div>
+  		</div>
+  
+  
+  		<script>  
+  
+  			var
+  				userGuess, userGuesses = "",
+  				correctLetters, guessesRemaining,
+  				correctGuessesMade = [], incorrectGuessesMade = [],
+  
+  				bandName, bandNameLength, bandNameIndex,
+  				bandNames = ["ASIA", "EMERSON LAKE AND PALMER", "PETER GABRIEL", "GENESIS", "KANSAS", "KING CRIMSON", "THE MOODY BLUES", "PINK FLOYD", "THE POLICE", "RUSH", "JETHRO TULL", "YES"],
+  				bandNameDisplay = [];
+  
+  
+  
+  			newGame();
+  
+  			document.onkeyup = function() {
+  				var keyStruck = event.keyCode;
+  				userGuess = event.key.toUpperCase();
+  
+  				//  Ignore the keystroke if it's not a-z. userGuess == "META" happens when you ctrl-r the page, so handle that too
+  				if ( (keyStruck > 64 && keyStruck < 91) || (keyStruck > 96 && keyStruck < 123) && (userGuess != "META") ) {
+  
+  					//  Ignore the guess if the user's already made it (right or wrong), otherwise continue
+  					if ( (!correctGuessesMade.includes(userGuess)) && (!incorrectGuessesMade.includes(userGuess)) ) {
+  						validateEntry();
+  						updateProgress();
+  
+    					if (correctLetters == bandNameLength)
+    						{ gameWin(); }
+              else if (guessesRemaining == 0)
+    					  { gameOver(); }
+  					}
+  				}
+  			}
+  
+  
+  			function validateEntry() {
+  				if (bandName.includes(userGuess)) {
+  					correctGuessesMade.push(userGuess);
+  
+  					for (var i = 0; i < bandName.length; i++)
+  						if (bandName.charAt(i) == userGuess) {
+  							bandNameDisplay[i] = userGuess;
+  							++correctLetters;
+  						}
+  				}
+  				else {
+  					incorrectGuessesMade.push(userGuess);
+  					--guessesRemaining;
+  				}
+  			}
+  
+  
+  			function updateProgress() {
+  				document.getElementById("displayWord").innerHTML = bandNameDisplay.join("");
+  				document.getElementById("correctGuesses").innerHTML = correctGuessesMade.toString();
+  				document.getElementById("incorrectGuesses").innerHTML = incorrectGuessesMade.toString();
+  				document.getElementById("guessesRemaining").innerHTML = guessesRemaining.toString();
+  			}
+  
+  
+  			function gameWin() {
+    			var audioContainer = document.getElementById("audioContainer")
+    			var audioPlayer = document.createElement("audio")
+    			audioPlayer.setAttribute("controls", true)
+    			audioPlayer.setAttribute("id", "songPlaying")
+    			audioContainer.appendChild(audioPlayer)
+  
+          var correctBand = bandNames[bandNameIndex]
+          correctBand = correctBand.replace(new RegExp(" ", "g"), '-');
+  
+          var correctCover = "url('./images/album-covers/" + correctBand + ".jpg')";
+          document.getElementById("album-cover").style.backgroundImage = correctCover;
+  
+          var correctSong = "<source src='./audio/" + correctBand + ".mp4'></source>";
+          correctSong = correctSong.toLowerCase();
+  
+          console.log('correctSong = ' + correctSong);
+          console.log('audio<source> = ' + document.getElementById("songPlaying").innerHTML);
+  
+          document.getElementById("songPlaying").innerHTML = correctSong;
+          document.getElementById("songPlaying").play();
+  			}
+  
+  
+  			function gameOver() {
+    		  document.getElementById("displayWord").innerHTML = "NO ROCK THIS TIME";
+  				document.getElementById("guessesRemaining").innerHTML = "0";
+  
+          var newImage = "url('./images/game-over.gif')";
+          document.getElementById("album-cover").style.backgroundImage = newImage;
+        }
+  
+  
+  			function newGame() {
+  				bandName = (bandNames[Math.floor(Math.random() * bandNames.length)]).toUpperCase();
+          bandNameIndex = bandNames.indexOf(bandName);
+  
+          console.log('bandName = ' + bandName);
+  
+          //  If the name has any spaces, don't count them as letters in the answer
+          bandNameLength = 0;
+          for ( var i = 0; i < bandName.length; i++) {
+            if (bandName.charAt(i) == " ")
+              --bandNameLength;
+          }
+          bandNameLength += bandName.length;
+  
+  				bandNameDisplay = [];
+  				for ( var i = 0; i < bandName.length; i++) {
+  				  if (bandName[i] == " ")
+  					  bandNameDisplay[i] = ' ';
+            else
+  					  bandNameDisplay[i] = '–';
+  				}
+  
+  				document.getElementById("displayWord").innerHTML = "&nbsp;";
+  				document.getElementById("displayWord").innerHTML = bandNameDisplay.join("");
+  
+  				document.getElementById("correctGuesses").innerHTML = "&nbsp";
+  				document.getElementById("incorrectGuesses").innerHTML = "&nbsp";
+  				document.getElementById("guessesRemaining").innerHTML = "&nbsp";
+  
+  				correctLetters = 0;
+  				guessesRemaining = 10;
+  
+  				correctGuessesMade = [];
+  				incorrectGuessesMade = [];
+  
+          document.getElementById("album-cover").style.backgroundImage = "url('./images/question-mark.png')";
+          
+          if (document.getElementById("songPlaying")) {
+            document.getElementById("songPlaying").pause();
+            document.getElementById("audioContainer").innerHTML = "";
+          }
+  			}
+  
+  		</script>
+  
+  	</div>	<!--	container	-->
+  
+  
+  	<!-- jQuery CDN -->
+  	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+  
+  	<!-- Bootstrap JavaScript CDN -->
+  	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  </body>
+
+</html>
